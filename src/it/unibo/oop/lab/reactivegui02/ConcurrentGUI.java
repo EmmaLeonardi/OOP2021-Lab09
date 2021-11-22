@@ -27,7 +27,7 @@ public class ConcurrentGUI extends JFrame {
      * Builds the GUI
      */
     public ConcurrentGUI() {
-        super();
+        super("Test of Concurrent GUI");
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
         this.setSize((int) (screenSize.getWidth() * WIDTH_PERC), (int) (screenSize.getHeight() * HEIGHT_PERC));
         this.setDefaultCloseOperation(EXIT_ON_CLOSE);
