@@ -23,8 +23,8 @@ public class AnotherConcurrentGUI extends JFrame {
     private final JButton up = new JButton("up");
     private final JButton down = new JButton("down");
     private final JButton stop = new JButton("stop");
-    
-    
+
+
     public AnotherConcurrentGUI() {
         super("Test of Another Concurrent GUI");
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -38,8 +38,12 @@ public class AnotherConcurrentGUI extends JFrame {
         p.add(stop);
         this.setVisible(true);
 
+        final Stopper stopper = new Stopper();
+        final var thread = new Thread(stopper);
         final Agent a = new Agent();
-        new Thread(a).start();
+        final var agent = new Thread(a);
+        thread.start();
+        agent.start();
 
         up.addActionListener(new ActionListener() {
 
@@ -65,7 +69,7 @@ public class AnotherConcurrentGUI extends JFrame {
         });
 
     }
-    
+
     /**
      * Agent is a counter.
      */
@@ -124,6 +128,28 @@ public class AnotherConcurrentGUI extends JFrame {
          */
         public void countDown() {
             this.isCountingDown = true;
+        }
+
+    }
+
+    /**
+     * Stopper is a thread that stops agent after 10 seconds
+     */
+    private class Stopper implements Runnable {
+
+        @Override
+        /**
+         * The main body of the thread
+         */
+        public void run() {
+
+            try {
+                Thread.sleep(10_000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            stop.doClick();
+
         }
 
     }
