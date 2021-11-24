@@ -24,7 +24,6 @@ public class AnotherConcurrentGUI extends JFrame {
     private final JButton down = new JButton("down");
     private final JButton stop = new JButton("stop");
 
-
     public AnotherConcurrentGUI() {
         super("Test of Another Concurrent GUI");
         final Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
@@ -145,13 +144,18 @@ public class AnotherConcurrentGUI extends JFrame {
 
             try {
                 Thread.sleep(10_000);
-            } catch (InterruptedException e) {
+                SwingUtilities.invokeAndWait(new Runnable() {
+                    @Override
+                    public void run() {
+                        stop.doClick();
+                    }
+
+                });
+            } catch (InterruptedException | InvocationTargetException e) {
                 e.printStackTrace();
+
             }
-            stop.doClick();
 
         }
-
     }
-
 }
