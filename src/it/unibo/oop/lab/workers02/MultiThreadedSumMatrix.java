@@ -16,57 +16,33 @@ public class MultiThreadedSumMatrix implements SumMatrix {
         this.nthread = n;
     }
 
-    /**
-     * @param matrix
-     *                   the matrix to use
-     * @return list of every element of the matrix Creates a list with every element
-     *         of the matrix.
-     */
-    private List<Double> createList(final double[][] matrix) {
-
-        final ArrayList<Double> list = new ArrayList<>();
-        // Devo capire come sistemare la questione della length delle colonne
-        // final int length = (int) (matrix.length / matrix[0].length);
-        final int l = matrix.length;
-
-        for (int i = 0; i < l; i++) {
-            // list.addAll(matrix[i]);
-            // Arrays.asList(null)
-            for (int j = 0; j < l; j++) {
-                list.add(matrix[i][j]);
-            }
-        }
-        return list;
-    }
-
     /** {@inheritDoc} */
     @Override
     public double sum(final double[][] matrix) {
 
-        final List<Double> list = createList(matrix);
-
-        final int size = list.size() % nthread + list.size() / nthread;
-        /*
-         * Build a list of workers
-         */
         final List<Worker> workers = new ArrayList<>(nthread);
+        final int nRow = matrix.length;
+        final int nCol = matrix[0].length;
+        final int totElements = nRow * nCol;
+        final int nElementsThread = (int) Math.ceil(totElements / nthread);
+        int elementsLeft = totElements;
+        int start = 0;
+        double sum = 0;
 
-        for (int start = 0; start < list.size(); start += size) {
-            workers.add(new Worker(list, start, size));
+        for (int i = 0; i < nthread; i++) {
+            // The number of elements the thread will sum
+            // If the number of remaining elements is less than the standard amount a thread
+            // reads,
+            // The thread reads all the elements leftover
+            final int nEleThread = start + nElementsThread > totElements ? elementsLeft : nElementsThread;
+            workers.add(new Worker(matrix, start, nEleThread));
+            elementsLeft = elementsLeft - nEleThread;
+            start = start + nElementsThread;
         }
 
-        /*
-         * Start them
-         */
         for (final Worker w : workers) {
             w.start();
         }
-        /*
-         * Wait for every one of them to finish. This operation is _way_ better done by
-         * using barriers and latches, and the whole operation would be better done with
-         * futures.
-         */
-        double sum = 0;
         for (final Worker w : workers) {
             try {
                 w.join();
@@ -74,31 +50,29 @@ public class MultiThreadedSumMatrix implements SumMatrix {
             } catch (InterruptedException e) {
                 throw new IllegalStateException(e);
             }
+
         }
-        /*
-         * Return the sum
-         */
         return sum;
     }
 
     private static class Worker extends Thread {
 
-        private final List<Double> list;
+        private final double matrix[][];
         private final int startpos;
         private final int nelem;
         private double res;
 
-        Worker(final List<Double> list, final int startpos, final int nelem) {
+        Worker(final double matrix[][], final int startpos, final int nelem) {
             super();
-            this.list = list;
+            this.matrix = matrix.clone();
             this.startpos = startpos;
             this.nelem = nelem;
         }
 
         @Override
         public void run() {
-            for (int i = startpos; i < list.size() && i < startpos + nelem; i++) {
-                this.res += this.list.get(i);
+            for (int i = startpos; i < startpos + nelem; i++) {
+                this.res += matrix[i / matrix[0].length][i % matrix.length];
             }
         }
 
