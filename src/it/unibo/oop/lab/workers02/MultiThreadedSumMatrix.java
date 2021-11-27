@@ -87,7 +87,7 @@ public class MultiThreadedSumMatrix implements SumMatrix {
          */
         @Override
         public void run() {
-            System.out.println("This thread sums the elements from "+startpos+" to "+(startpos+nelem));
+            //System.out.println("This thread sums the elements from "+startpos+" to "+(startpos+nelem));
             for (int i = startpos; i < startpos + nelem; i++) {
                 this.res += matrix[i / matrix[0].length][i % matrix.length];
             }
