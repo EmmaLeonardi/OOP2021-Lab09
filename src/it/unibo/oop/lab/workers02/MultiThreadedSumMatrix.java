@@ -24,20 +24,22 @@ public class MultiThreadedSumMatrix implements SumMatrix {
         final int nRow = matrix.length;
         final int nCol = matrix[0].length;
         final int totElements = nRow * nCol;
-        final int nElementsThread = (int) Math.ceil(totElements / nthread);
-        int elementsLeft = totElements;
+        final int nElements4Thread = (int) Math.ceil((totElements * 1.0) / nthread);
+        int elementsLeftover = totElements;
         int start = 0;
         double sum = 0;
 
         for (int i = 0; i < nthread; i++) {
-            // The number of elements the thread will sum
-            // If the number of remaining elements is less than the standard amount a thread
-            // reads,
-            // The thread reads all the elements leftover
-            final int nEleThread = start + nElementsThread > totElements ? elementsLeft : nElementsThread;
-            workers.add(new Worker(matrix, start, nEleThread));
-            elementsLeft = elementsLeft - nEleThread;
-            start = start + nElementsThread;
+
+            /*
+             * nElThread is the number of elements that the thread will sum, starting by
+             * start. If the number of elements the thread is supposed to sum is less than
+             * the elements left in the matrix, the thread sums all the leftover elements
+             */
+            final int nElThread = start + nElements4Thread > totElements ? elementsLeftover : nElements4Thread;
+            workers.add(new Worker(matrix, start, nElThread));
+            elementsLeftover = elementsLeftover - nElThread;
+            start = start + nElements4Thread;
         }
 
         for (final Worker w : workers) {
@@ -55,6 +57,9 @@ public class MultiThreadedSumMatrix implements SumMatrix {
         return sum;
     }
 
+    /**
+     * Worker is a class that sums the values of a matrix
+     */
     private static class Worker extends Thread {
 
         private final double matrix[][];
@@ -62,6 +67,14 @@ public class MultiThreadedSumMatrix implements SumMatrix {
         private final int nelem;
         private double res;
 
+        /**
+         * @param matrix
+         *                     the matrix to sum
+         * @param startpos
+         *                     the starting element (as the nth element of the matrix)
+         * @param nelem
+         *                     the number of elements to sum starting from startpos
+         */
         Worker(final double matrix[][], final int startpos, final int nelem) {
             super();
             this.matrix = matrix.clone();
@@ -69,17 +82,19 @@ public class MultiThreadedSumMatrix implements SumMatrix {
             this.nelem = nelem;
         }
 
+        /**
+         * Sums the elements in between the parameters specified in the constructor
+         */
         @Override
         public void run() {
+            System.out.println("This thread sums the elements from "+startpos+" to "+(startpos+nelem));
             for (int i = startpos; i < startpos + nelem; i++) {
                 this.res += matrix[i / matrix[0].length][i % matrix.length];
             }
         }
 
         /**
-         * Returns the result of summing up the integers within the list.
-         * 
-         * @return the sum of every element in the array
+         * @return sum of the doubles in between the matrix limits
          */
         public double getResult() {
             return this.res;
